@@ -1,0 +1,46 @@
+#!/bin/bash
+
+minimum_width=30
+
+basename=$(basename "$1")
+filename="${basename%.*}"
+extension="${basename##*.}"
+
+generate_filename() {
+    printf "$filename"_"$1"w."$extension"
+}
+
+width=`identify -format "%w" "$1"`
+
+scaledown_factor=1
+
+while true; do
+    scaledown_width=`expr $width / $scaledown_factor`
+    scaledown_filename=`generate_filename $scaledown_width`
+
+    if [ $scaledown_factor -eq 1 ]; then
+        src="$scaledown_filename"
+        printf "Generating $scaledown_filename (full-size copy)\n"
+        cp "$1" "$scaledown_filename"
+    elif [ $scaledown_width -lt $minimum_width ]; then
+        break
+    else
+        printf "Generating $scaledown_filename\n"
+        convert "$1" -resize $scaledown_width "$scaledown_filename"
+    fi
+
+    srcset="$srcset$scaledown_filename ${scaledown_width}w,\n    "
+    scaledown_factor=`expr $scaledown_factor \* 2`
+done
+
+srcset=${srcset%,*}
+img="<img srcset=\"$srcset\"\n  sizes=\"\"\n  src=\"$src\">"
+
+printf "\n$img\n"
+
+# OS X only
+if command -v pbcopy >/dev/null 2>&1; then
+  printf "$img" | pbcopy
+  printf "\n<img> copied to clipboard.\n"
+fi
+
