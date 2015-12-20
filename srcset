@@ -1,5 +1,12 @@
 #!/bin/bash
 
+if [ "$#" -ne 1 ] ; then
+  printf "srcset generates scaled-down versions of an image and the corresponding <img srcset=\"...\"> HTML.
+
+Usage: srcset <path-to-image>\n" >&2
+  exit 1
+fi
+
 minimum_width=30
 
 basename=$(basename "$1")
