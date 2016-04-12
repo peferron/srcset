@@ -1,47 +1,55 @@
 #!/bin/bash
 
-if [ "$#" -ne 1 ] ; then
+if [ "$#" -lt 2 ] ; then
   printf "srcset generates scaled-down versions of an image and the corresponding <img srcset=\"...\"> HTML.
 
-Usage: srcset <path-to-image>\n" >&2
+Usage: srcset <path-to-image> <width> <width> ...\n" >&2
   exit 1
 fi
 
-minimum_width=30
+src_path="$1"
+src_width=`identify -format "%w" "$src_path"`
 
-basename=$(basename "$1")
+basename=$(basename "$src_path")
 filename="${basename%.*}"
 extension="${basename##*.}"
 
-generate_filename() {
-    printf "$filename"_"$1"w."$extension"
-}
+tmp_file=srcset_tmp."$extension"
 
-width=`identify -format "%w" "$1"`
+copied=false
+shift
 
-scaledown_factor=1
+while test ${#} -gt 0; do
+  target_width="$1"
 
-while true; do
-    scaledown_width=`expr $width / $scaledown_factor`
-    scaledown_filename=`generate_filename $scaledown_width`
-
-    if [ $scaledown_factor -eq 1 ]; then
-        src="$scaledown_filename"
-        printf "Generating $scaledown_filename (full-size copy)\n"
-        cp "$1" "$scaledown_filename"
-    elif [ $scaledown_width -lt $minimum_width ]; then
-        break
-    else
-        printf "Generating $scaledown_filename\n"
-        convert "$1" -resize $scaledown_width "$scaledown_filename"
+  if [ "$src_width" -le "$target_width" ]; then
+    if $copied; then
+      shift
+      continue
     fi
+    copied=true
+    cp "$src_path" "$tmp_file"
+  else
+    convert "$src_path"  -resize "$target_width" "$tmp_file"
+  fi
 
-    srcset="$srcset$scaledown_filename ${scaledown_width}w,\n    "
-    scaledown_factor=`expr $scaledown_factor \* 2`
+  tmp_width=`identify -format "%w" "$tmp_file"`
+  tmp_height=`identify -format "%h" "$tmp_file"`
+  target_file="$filename"_"$tmp_width"x"$tmp_height"."$extension"
+  mv "$tmp_file" "$target_file"
+  srcset="$srcset$target_file ${tmp_width}w,\n  "
+
+  if [ "$src_width" -le "$target_width" ]; then
+      printf "Generated $target_file (full-size copy)\n"
+  else
+      printf "Generated $target_file\n"
+  fi
+
+  shift
 done
 
 srcset=${srcset%,*}
-img="<img srcset=\"$srcset\"\n  sizes=\"\"\n  src=\"$src\">"
+img="<img srcset=\"$srcset\"\n  sizes=\"\"\n  src=\"$src_path\">"
 
 printf "\n$img\n"
 
@@ -50,4 +58,3 @@ if command -v pbcopy >/dev/null 2>&1; then
   printf "$img" | pbcopy
   printf "\n<img> copied to clipboard.\n"
 fi
-

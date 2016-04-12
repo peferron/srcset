@@ -6,33 +6,26 @@ Example:
 
 ```bash
 $ ls -lS
-total 424
--rw-r--r--@ 1 peferron  staff  212277 Dec 17 09:22 picture.png
+total 7648
+-rw-r--r--  1 peferron  staff  3913850 Mar  9 18:29 picture.jpg
 
-$ srcset picture.png
-Generating picture_632w.png (full-size copy)
-Generating picture_316w.png
-Generating picture_158w.png
-Generating picture_79w.png
-Generating picture_39w.png
+$ srcset picture.jpg 500 1000 5000
+Generated picture_500x500.jpg
+Generated picture_1000x1000.jpg
+Generated picture_2300x2300.jpg (full-size copy)
 
-<img srcset="picture_632w.png 632w,
-    picture_316w.png 316w,
-    picture_158w.png 158w,
-    picture_79w.png 79w,
-    picture_39w.png 39w"
+<img srcset="picture_500x500.jpg 500w,
+  picture_1000x1000.jpg 1000w,
+  picture_2300x2300.jpg 2300w"
   sizes=""
-  src="picture_632w.png">
+  src="picture.jpg">
 
 <img> copied to clipboard.
 
 $ ls -lS
-total 1064
--rw-r--r--@ 1 peferron  staff  212277 Dec 17 09:22 picture.png
--rw-r--r--@ 1 peferron  staff  212277 Dec 20 03:35 picture_632w.png
--rw-r--r--  1 peferron  staff   68450 Dec 20 03:35 picture_316w.png
--rw-r--r--  1 peferron  staff   24952 Dec 20 03:35 picture_158w.png
--rw-r--r--  1 peferron  staff    9757 Dec 20 03:35 picture_79w.png
--rw-r--r--  1 peferron  staff    3964 Dec 20 03:35 picture_39w.png
-
+total 18744
+-rw-r--r--  1 peferron  staff  3913850 Mar  9 18:29 picture.jpg
+-rw-r--r--  1 peferron  staff  3913850 Apr 12 19:16 picture_2300x2300.jpg
+-rw-r--r--  1 peferron  staff  1358584 Apr 12 19:16 picture_1000x1000.jpg
+-rw-r--r--  1 peferron  staff   402301 Apr 12 19:16 picture_500x500.jpg
 ```
