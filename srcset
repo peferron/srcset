@@ -2,8 +2,9 @@
 
 if [ "$#" -lt 2 ] ; then
   printf "srcset generates scaled-down versions of an image and the corresponding <img srcset=\"...\"> HTML.
-
-Usage: srcset <path-to-image> <width> <width> ...\n" >&2
+Usage: srcset <path-to-image> <width> <width> ...
+Widths are specified in pixels, with an optional \"xN\" multiplier suffix.
+Example: srcset pic.jpg 176 176x2 176x3 1000\n" >&2
   exit 1
 fi
 
@@ -19,8 +20,18 @@ tmp_file=srcset_tmp."$extension"
 copied=false
 shift
 
+function getwidth {
+    array=(${1/x/ })
+    width=${array[0]}
+    multiplier=${array[1]}
+    if [ ! $multiplier ]; then
+      multiplier=1
+    fi
+    echo $(expr $width \* $multiplier)
+}
+
 while test ${#} -gt 0; do
-  target_width="$1"
+  target_width=`getwidth $1`
 
   if [ "$src_width" -le "$target_width" ]; then
     if $copied; then
@@ -37,7 +48,7 @@ while test ${#} -gt 0; do
   tmp_height=`identify -format "%h" "$tmp_file"`
   target_file="$filename"_"$tmp_width"x"$tmp_height"."$extension"
   mv "$tmp_file" "$target_file"
-  srcset="$srcset$target_file ${tmp_width}w,\n  "
+  srcset="$srcset$target_file ${tmp_width}w,\n"
 
   if [ "$src_width" -le "$target_width" ]; then
       printf "Generated $target_file (full-size copy)\n"
@@ -49,12 +60,12 @@ while test ${#} -gt 0; do
 done
 
 srcset=${srcset%,*}
-img="<img srcset=\"$srcset\"\n  sizes=\"\"\n  src=\"$src_path\">"
+img="<img srcset=\"$srcset\"\nsizes=\"\"\nsrc=\"$src_path\">"
 
 printf "\n$img\n"
 
 # OS X only
 if command -v pbcopy >/dev/null 2>&1; then
   printf "$img" | pbcopy
-  printf "\n<img> copied to clipboard.\n"
+  printf "\n<HTML copied to clipboard.\n"
 fi
